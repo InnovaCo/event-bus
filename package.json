@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha --reporter spec"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:InnoveCo/event-bus.git"
+  },
   "keywords": [
     "event",
     "bus",
