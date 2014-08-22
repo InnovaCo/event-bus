@@ -14,7 +14,6 @@
   "author": "Sergey Chikuyonok <sergey.chikuyonok@inn.ru>",
   "license": "ISC",
   "dependencies": {
-    "lodash": "^2.4.1",
     "postal": "^0.10.3"
   },
   "devDependencies": {
