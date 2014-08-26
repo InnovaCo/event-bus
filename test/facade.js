@@ -102,9 +102,125 @@ describe('Backbone facade', function() {
 		channel.on('test', cb);
 		bus.trigger('my-channel', 'test', 2);
 		assert.equal(a, 5);
-		
+
 		channel.off('test', cb);
 		bus.trigger('my-channel', 'test', 2);
 		assert.equal(a, 7);
+	});
+
+	it('backbone.js: on and trigger', function() {
+		var obj = { counter: 0 };
+
+		bus.on('event', function() { obj.counter += 1; });
+		bus.trigger('event');
+		assert.equal(obj.counter, 1, 'counter should be incremented.');
+		bus.trigger('event');
+		bus.trigger('event');
+		bus.trigger('event');
+		bus.trigger('event');
+		assert.equal(obj.counter, 5, 'counter should be incremented five times.');
+	});
+
+	it('backbone.js: binding and triggering multiple events', function() {
+		var obj = { counter: 0 };
+
+		bus.on('a b c', function() { obj.counter += 1; });
+
+		bus.trigger('a');
+		assert.equal(obj.counter, 1);
+
+		bus.trigger('a b');
+		assert.equal(obj.counter, 3);
+
+		bus.trigger('c');
+		assert.equal(obj.counter, 4);
+
+		bus.off('a c');
+		bus.trigger('a b c');
+		assert.equal(obj.counter, 5);
+	});
+
+	it('backbone.js: on, then unbind all functions', function() {
+		var obj = { counter: 0 };
+		var callback = function() { obj.counter += 1; };
+		bus.on('event', callback);
+		bus.trigger('event');
+		bus.off('event');
+		bus.trigger('event');
+		assert.equal(obj.counter, 1, 'counter should have only been incremented once.');
+	});
+
+	it('backbone.js: bind two callbacks, unbind only one', function() {
+		var obj = { counterA: 0, counterB: 0 };
+		var callback = function() { obj.counterA += 1; };
+		bus.on('event', callback);
+		bus.on('event', function() { obj.counterB += 1; });
+		bus.trigger('event');
+		bus.off('event', callback);
+		bus.trigger('event');
+		assert.equal(obj.counterA, 1, 'counterA should have only been incremented once.');
+		assert.equal(obj.counterB, 2, 'counterB should have been incremented twice.');
+	});
+
+	it('backbone.js: unbind a callback in the midst of it firing', function() {
+		var obj = {counter: 0};
+		var callback = function() {
+			obj.counter += 1;
+			bus.off('event', callback);
+		};
+		bus.on('event', callback);
+		bus.trigger('event');
+		bus.trigger('event');
+		bus.trigger('event');
+		assert.equal(obj.counter, 1, 'the callback should have been unbound.');
+	});
+
+	it('backbone.js: two binds that unbind themeselves', function() {
+		var obj = { counterA: 0, counterB: 0 };
+		var incrA = function(){ obj.counterA += 1; bus.off('event', incrA); };
+		var incrB = function(){ obj.counterB += 1; bus.off('event', incrB); };
+		bus.on('event', incrA);
+		bus.on('event', incrB);
+		bus.trigger('event');
+		bus.trigger('event');
+		bus.trigger('event');
+		assert.equal(obj.counterA, 1, 'counterA should have only been incremented once.');
+		assert.equal(obj.counterB, 1, 'counterB should have only been incremented once.');
+	});
+
+	it('backbone.js: bind a callback with a supplied context', function(done) {
+		var TestClass = function () {
+			return this;
+		};
+
+		TestClass.prototype.assertTrue = function() {
+			done();
+		};
+
+		bus.on('event', function () { this.assertTrue(); }, (new TestClass));
+		bus.trigger('event');
+		bus.off('event');
+	});
+
+	it('backbone.js: remove all events for a specific context', function() {
+		var obj = { counterA: 0, counterB: 0 };
+		bus.on('x y', function() { obj.counterA += 1; });
+		bus.on('x y', function() { obj.counterB += 1; }, obj);
+		bus.off(null, null, obj);
+		bus.trigger('x y');
+		assert.equal(obj.counterA, 2, 'counterA should have been incremented twice.');
+		assert.equal(obj.counterB, 0, 'the callback should have been unbound.');
+	});
+
+	it('backbone.js: remove all events for a specific callback', function() {
+		var obj = { counterA: 0, counterB: 0 };
+		var success = function() { obj.counterA += 1; };
+		var fail = function() { obj.counterB += 1; };
+		bus.on('x y', success);
+		bus.on('x y', fail);
+		bus.off(null, fail);
+		bus.trigger('x y');
+		assert.equal(obj.counterA, 2, 'counterA should have been incremented twice.');
+		assert.equal(obj.counterB, 0, 'the callback should have been unbound.');
 	});
 });
