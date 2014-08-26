@@ -1,12 +1,12 @@
 (function (root, factory) {
-	if (typeof module === "object" && module.exports) {
+	if (typeof module === 'object' && module.exports) {
 		// Node, or CommonJS-Like environments
-		module.exports = factory(require("lodash"));
+		module.exports = factory();
 	} else if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
-		define('eventBus', ['lodash'], factory);
+		define('eventBus', factory);
 	} else {
 		// Browser globals
-		root.eventBus = factory(root._);
+		root.eventBus = factory();
 	}
-}(this, function (_) {
+}(this, function () {
