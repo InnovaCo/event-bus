@@ -1,44 +1,37 @@
-var gulp = require('gulp');
-var uglify = require('gulp-uglify');
-var rjs = require('gulp-requirejs');
+var gulp = require('gulp'),
+	uglify = require('gulp-uglify'),
+	rjs = require('gulp-requirejs'),
+	_ = require('underscore');
 
-gulp.task('js', function() {
-	return rjs({
-			baseUrl: './',
-			name: 'lib/almond',
-			include: ['./index'],
-			optimize: 'none',
-			out: 'event-bus.js',
-			paths: {
-				postal: './node_modules/postal/lib/postal',
-				lodash: './node_modules/postal/node_modules/lodash/lodash',
-				conduitjs: './node_modules/postal/node_modules/conduitjs/lib/conduit'
-			},
-			wrap: {
-				start: 'var eventBus = (function() {',
-				end: ';return require(\'index\');})();'
-			}
-		})
-		.pipe(uglify())
-		.pipe(gulp.dest('./out'));
+var buildOptions = {
+		baseUrl: './',
+		name: './node_modules/almond/almond',
+		paths: {
+			'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
+			'postal': './node_modules/postal/lib/postal',
+			'lodash': 'empty:'
+		},
+		include: ['index'],
+		almond: true,
+		wrap: {
+			startFile: './wrappers/start.frag',
+			endFile: './wrappers/end.frag'
+		},
+		optimize: 'none',
+		out: 'event-bus.js'
+	};
+
+gulp.task('rjs:dev', function() {
+	return rjs(buildOptions).pipe(gulp.dest('./out'));
 });
 
-gulp.task('js-minimal', function() {
-	return rjs({
-			baseUrl: './',
-			name: 'eventBus',
-			exclude: ['lodash', 'conduitjs'],
-			optimize: 'none',
-			out: 'event-bus-mini.js',
-			paths: {
-				eventBus: './index',
-				postal: './node_modules/postal/lib/postal',
-				lodash: './node_modules/postal/node_modules/lodash/lodash',
-				conduitjs: './node_modules/postal/node_modules/conduitjs/lib/conduit'
-			}
-		})
-		.pipe(uglify())
-		.pipe(gulp.dest('./out'));
+gulp.task('rjs:live', function() {
+	return rjs(_.extend({}, buildOptions, {
+		preserveLicenseComments: false,
+		out: 'event-bus.min.js'
+	}))
+	.pipe(uglify())
+	.pipe(gulp.dest('./out'));
 });
 
-gulp.task('default', ['js', 'js-minimal']);
+gulp.task('default', ['rjs:dev', 'rjs:live']);

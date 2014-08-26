@@ -1,24 +1,24 @@
 {
-  "name": "event-bus",
-  "main": "index.js",
-  "version": "1.0.0",
-  "homepage": "https://github.com/InnovaCo/event-bus",
-  "authors": [
-    "Sergey Chikuyonok <serge.che@gmail.com>"
-  ],
-  "description": "Шина событий, основанная на Postal.js",
-  "keywords": [
-    "event",
-    "bus",
-    "postal"
-  ],
-  "license": "MIT",
-  "private": true,
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ]
+	"name": "event-bus",
+	"main": "index.js",
+	"version": "1.0.0",
+	"homepage": "https://github.com/InnovaCo/event-bus",
+	"authors": [
+		"Sergey Chikuyonok <serge.che@gmail.com>"
+	],
+	"description": "Шина событий, основанная на Postal.js",
+	"keywords": [
+		"event",
+		"bus",
+		"postal"
+	],
+	"license": "MIT",
+	"private": true,
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests"
+	]
 }
