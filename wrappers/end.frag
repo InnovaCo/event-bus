@@ -1,5 +1,3 @@
-	define('_', function() {
-		return _;
-	});
+	define('lodash', function() { return _; });
 	return require('index');
 }));
