@@ -107,8 +107,10 @@ describe('Backbone facade', function() {
 		bus.trigger('my-channel', 'test', 2);
 		assert.equal(a, 7);
 	});
+});
 
-	it('backbone.js: on and trigger', function() {
+describe('Backbone compatibility tests', function() {
+	it('on and trigger', function() {
 		var obj = { counter: 0 };
 
 		bus.on('event', function() { obj.counter += 1; });
@@ -121,7 +123,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counter, 5, 'counter should be incremented five times.');
 	});
 
-	it('backbone.js: binding and triggering multiple events', function() {
+	it('binding and triggering multiple events', function() {
 		var obj = { counter: 0 };
 
 		bus.on('a b c', function() { obj.counter += 1; });
@@ -140,7 +142,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counter, 5);
 	});
 
-	it('backbone.js: on, then unbind all functions', function() {
+	it('on, then unbind all functions', function() {
 		var obj = { counter: 0 };
 		var callback = function() { obj.counter += 1; };
 		bus.on('event', callback);
@@ -150,7 +152,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counter, 1, 'counter should have only been incremented once.');
 	});
 
-	it('backbone.js: bind two callbacks, unbind only one', function() {
+	it('bind two callbacks, unbind only one', function() {
 		var obj = { counterA: 0, counterB: 0 };
 		var callback = function() { obj.counterA += 1; };
 		bus.on('event', callback);
@@ -162,7 +164,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counterB, 2, 'counterB should have been incremented twice.');
 	});
 
-	it('backbone.js: unbind a callback in the midst of it firing', function() {
+	it('unbind a callback in the midst of it firing', function() {
 		var obj = {counter: 0};
 		var callback = function() {
 			obj.counter += 1;
@@ -175,7 +177,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counter, 1, 'the callback should have been unbound.');
 	});
 
-	it('backbone.js: two binds that unbind themeselves', function() {
+	it('two binds that unbind themeselves', function() {
 		var obj = { counterA: 0, counterB: 0 };
 		var incrA = function(){ obj.counterA += 1; bus.off('event', incrA); };
 		var incrB = function(){ obj.counterB += 1; bus.off('event', incrB); };
@@ -188,7 +190,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counterB, 1, 'counterB should have only been incremented once.');
 	});
 
-	it('backbone.js: bind a callback with a supplied context', function(done) {
+	it('bind a callback with a supplied context', function(done) {
 		var TestClass = function () {
 			return this;
 		};
@@ -202,7 +204,7 @@ describe('Backbone facade', function() {
 		bus.off('event');
 	});
 
-	it('backbone.js: remove all events for a specific context', function() {
+	it('remove all events for a specific context', function() {
 		var obj = { counterA: 0, counterB: 0 };
 		bus.on('x y', function() { obj.counterA += 1; });
 		bus.on('x y', function() { obj.counterB += 1; }, obj);
@@ -212,7 +214,7 @@ describe('Backbone facade', function() {
 		assert.equal(obj.counterB, 0, 'the callback should have been unbound.');
 	});
 
-	it('backbone.js: remove all events for a specific callback', function() {
+	it('remove all events for a specific callback', function() {
 		var obj = { counterA: 0, counterB: 0 };
 		var success = function() { obj.counterA += 1; };
 		var fail = function() { obj.counterB += 1; };

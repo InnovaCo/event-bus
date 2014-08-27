@@ -4,9 +4,9 @@
 	"description": "Шина событий, основанная на Postal.JS",
 	"main": "index.js",
 	"scripts": {
-		"build": "gulp",
 		"test": "mocha --reporter spec",
-		"install": ["npm install", "gulp"]
+		"build": "./node_modules/.bin/gulp",
+		"install": ["npm install", "./node_modules/.bin/gulp"]
 	},
 	"repository": {
 		"type": "git",
