@@ -22,6 +22,6 @@
 		"tests"
 	],
 	"scripts": {
-		"install": ["npm install", "gulp"]
+		"install": ["npm install", "./node_modules/.bin/gulp"]
 	}
 }
