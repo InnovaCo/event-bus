@@ -68,7 +68,7 @@ eventBus.on('my-event', function(data) {
 });
 
 // подписываемся на событие конкретного канала
-eventBus.on('my-channel', 'my-event', function(data) {
+eventBus.on('@my-channel', 'my-event', function(data) {
     console.log('Received', data);
 });
 eventBus.channel('my-channel').on('my-event', function(data) {
@@ -79,13 +79,13 @@ eventBus.channel('my-channel').on('my-event', function(data) {
 eventBus.trigger('my-event', 'Test message');
 
 // вещаем событие на канале my-channel
-eventBus.trigger('my-channel', 'my-event', 'Test message');
+eventBus.trigger('@my-channel', 'my-event', 'Test message');
 eventBus.channel('my-channel').trigger('my-event', 'Test message');
 
 // отписываемся от события
 eventBus.off('my-event');
 eventBus.off('my-event', callback);
-eventBus.off('my-channel', 'my-event', callback);
+eventBus.off('@my-channel', 'my-event', callback);
 ```
 
 ## Хранение сообщений
