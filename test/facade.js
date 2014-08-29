@@ -11,10 +11,10 @@ describe('Backbone facade', function() {
 		assert.equal(a, 2);
 
 		// подписываемся на канал
-		bus.on('my-channel', 'test', function(data) {
+		bus.on('@my-channel', 'test', function(data) {
 			a = data;
 		});
-		bus.trigger('my-channel', 'test', 3);
+		bus.trigger('@my-channel', 'test', 3);
 		assert.equal(a, 3);
 	});
 
@@ -28,12 +28,12 @@ describe('Backbone facade', function() {
 		assert.equal(a, 1);
 
 		// отписываем все события от канала
-		bus.on('my-channel', 'test', function(data) {
+		bus.on('@my-channel', 'test', function(data) {
 			a = data;
 		});
 
-		bus.off('my-channel', 'test');
-		bus.trigger('my-channel', 'test', 3);
+		bus.off('@my-channel', 'test');
+		bus.trigger('@my-channel', 'test', 3);
 		assert.equal(a, 1);
 
 		// отписываем только конкретный обработчик
@@ -48,12 +48,47 @@ describe('Backbone facade', function() {
 		assert.equal(a, 2);
 	});
 
+	it('global data transfer', function() {
+		var a = 'hello',
+			b = 1,
+			c = { d: 1 },
+			count = 0;
+
+		bus.on('data', function(data) {
+			switch (typeof data) {
+				case 'string':
+					a += ' ' + data;
+					break;
+				case 'number':
+					b += data;
+					break;
+				case 'object':
+					for (var key in data) {
+						c[key] = data[key];
+					}
+					break;
+				default:
+					count++;
+			}
+		});
+
+		bus.trigger('data', 'world');
+		bus.trigger('data', 2);
+		bus.trigger('data', { e: 2 });
+		bus.trigger('data');
+
+		assert.equal(a, 'hello world');
+		assert.equal(b, 3);
+		assert.equal(Object.keys(c).length, 2);
+		assert.equal(count, 1);
+	});
+
 	it('global trigger', function() {
 		var a = 1, b = 1;
 		bus.on('test', function(data) {
 			a += data;
 		});
-		bus.on('my-channel', 'test', function(data) {
+		bus.on('@my-channel', 'test', function(data) {
 			b += data;
 		});
 
@@ -61,7 +96,7 @@ describe('Backbone facade', function() {
 		assert.equal(a, 3);
 		assert.equal(b, 1);
 
-		bus.trigger('my-channel', 'test', 2);
+		bus.trigger('@my-channel', 'test', 2);
 		assert.equal(a, 3);
 		assert.equal(b, 3);
 	});
@@ -89,7 +124,7 @@ describe('Backbone facade', function() {
 
 		channel.off('test');
 
-		bus.trigger('my-channel', 'test', 2);
+		bus.trigger('@my-channel', 'test', 2);
 		assert.equal(a, 1);
 
 		// отписываем конкретный слушатель
@@ -100,12 +135,89 @@ describe('Backbone facade', function() {
 			a += data;
 		});
 		channel.on('test', cb);
-		bus.trigger('my-channel', 'test', 2);
+		bus.trigger('@my-channel', 'test', 2);
 		assert.equal(a, 5);
 
 		channel.off('test', cb);
-		bus.trigger('my-channel', 'test', 2);
+		bus.trigger('@my-channel', 'test', 2);
 		assert.equal(a, 7);
+	});
+
+	it('channel data transfer', function() {
+		var a = 'hello',
+			b = 1,
+			c = { d: 1 },
+			count = 0;
+
+		var channel = bus.channel('data-channel');
+
+		channel.on('data', function(data) {
+			switch (typeof data) {
+				case 'string':
+					a += ' ' + data;
+					break;
+				case 'number':
+					b += data;
+					break;
+				case 'object':
+					for (var key in data) {
+						c[key] = data[key];
+					}
+					break;
+				default:
+					count++;
+			}
+		});
+
+		bus.trigger('@data-channel', 'data', 'world');
+		bus.trigger('@data-channel', 'data', 2);
+		bus.trigger('@data-channel', 'data', { e: 2 });
+		bus.trigger('@data-channel', 'data');
+
+		assert.equal(a, 'hello world');
+		assert.equal(b, 3);
+		assert.equal(Object.keys(c).length, 2);
+		assert.equal(count, 1);
+	});
+
+	it('on channel data transfer', function() {
+		var a = 'hello',
+			b = 1,
+			c = { d: 1 },
+			count = 0;
+
+		var channel = bus.channel('data-channel');
+
+		function handler(data) {
+			switch (typeof data) {
+				case 'string':
+					a += ' ' + data;
+					break;
+				case 'number':
+					b += data;
+					break;
+				case 'object':
+					for (var key in data) {
+						c[key] = data[key];
+					}
+					break;
+				default:
+					count++;
+			}
+		}
+
+		bus.on('data', handler);
+		channel.on('data', handler);
+
+		channel.trigger('data', 'world');
+		channel.trigger('data', 2);
+		channel.trigger('data', { e: 2 });
+		channel.trigger('data');
+
+		assert.equal(a, 'hello world');
+		assert.equal(b, 3);
+		assert.equal(Object.keys(c).length, 2);
+		assert.equal(count, 1);
 	});
 });
 
