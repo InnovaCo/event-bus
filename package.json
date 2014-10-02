@@ -1,6 +1,6 @@
 {
   "name": "event-bus",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Шина событий, основанная на Postal.JS",
   "main": "index.js",
   "scripts": {

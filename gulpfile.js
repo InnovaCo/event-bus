@@ -44,10 +44,8 @@ gulp.task('standalone', function() {
  * переименовываются: к ним добавляется `packages/`
  */
 gulp.task('requirejs', function() {
-	return rjs(merge(true, buildOptions, {
+	return rjs(merge.recursive(true, buildOptions, {
 		paths: {
-			'conduitjs': 'empty:',
-			'postal': 'empty:',
 			'lodash': 'empty:'
 		},
 		wrap: {

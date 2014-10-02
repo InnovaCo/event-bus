@@ -1,5 +1,3 @@
-define('lodash', function() {return _;});
-define('conduitjs', function() {return conduitjs;});
-define('postal', function() {return postal;});
+define('lodash', [], _);
 return require('index');
 });
