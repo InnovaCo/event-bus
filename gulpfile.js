@@ -1,66 +1,65 @@
 var gulp = require('gulp'),
 	uglify = require('gulp-uglify'),
 	rjs = require('gulp-requirejs'),
-	utils = require('./lib/utils');
+	rename = require('gulp-rename'),
+	merge = require('merge');
+
+var DEST = './out';
 
 var buildOptions = {
-		baseUrl: './',
-		name: './node_modules/almond/almond',
+	baseUrl: './',
+	name: './node_modules/almond/almond',
+	paths: {
+		'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
+		'postal': './node_modules/postal/lib/postal',
+		'lodash': './node_modules/postal/node_modules/lodash/lodash'
+	},
+	include: ['index'],
+	almond: true,
+	wrap: {
+		startFile: './wrappers/standalone/start.frag',
+		endFile: './wrappers/standalone/end.frag'
+	},
+	optimize: 'none',
+	preserveLicenseComments: false,
+	out: 'event-bus.js'
+};
+
+/**
+ * Сборка standalone-версии без каких-либо зависимостей: 
+ * файл можно просто вставить на страницу как скрипт
+ */
+gulp.task('standalone', function() {
+	return rjs(buildOptions)
+	.pipe(gulp.dest(DEST))
+	.pipe(rename('event-bus.min.js'))
+	.pipe(uglify())
+	.pipe(gulp.dest(DEST));
+});
+
+/**
+ * Сборка версии для Require.js: содержит только внутренние
+ * зависимости, а внешние (типа Conduit и Lo-Dash) в сборку
+ * не включаются. Также ссылки на эти внешние модули 
+ * переименовываются: к ним добавляется `packages/`
+ */
+gulp.task('requirejs', function() {
+	return rjs(merge(true, buildOptions, {
 		paths: {
-			'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
-			'postal': './node_modules/postal/lib/postal',
-			'lodash': './node_modules/lodash/lodash'
-		},
-		include: ['index'],
-		almond: true,
-		wrap: {
-			startFile: './wrappers/standalone/start.frag',
-			endFile: './wrappers/standalone/end.frag'
-		},
-		optimize: 'none',
-		out: 'event-bus.js'
-	};
-
-gulp.task('standalone:dev', function() {
-	return rjs(buildOptions).pipe(gulp.dest('./out'));
-});
-
-gulp.task('standalone:live', function() {
-	return rjs(utils.extend({}, buildOptions, {
-		preserveLicenseComments: false,
-		out: 'event-bus.min.js'
-	}))
-	.pipe(uglify())
-	.pipe(gulp.dest('./out'));
-});
-
-gulp.task('base:dev', function() {
-	return rjs(utils.extend({}, buildOptions, {
-		paths: utils.extend({}, buildOptions.paths, {
+			'conduitjs': 'empty:',
+			'postal': 'empty:',
 			'lodash': 'empty:'
-		}),
-		wrap: {
-			startFile: './wrappers/base/start.frag',
-			endFile: './wrappers/base/end.frag'
 		},
-		out: 'event-bus-base.js'
-	})).pipe(gulp.dest('./out'));
-});
-
-gulp.task('base:live', function() {
-	return rjs(utils.extend({}, buildOptions, {
-		paths: utils.extend({}, buildOptions.paths, {
-			'lodash': 'empty:'
-		}),
 		wrap: {
-			startFile: './wrappers/base/start.frag',
-			endFile: './wrappers/base/end.frag'
+			startFile: './wrappers/requirejs/start.frag',
+			endFile: './wrappers/requirejs/end.frag'
 		},
-		preserveLicenseComments: false,
-		out: 'event-bus-base.min.js'
+		out: 'event-bus-requirejs.js'
 	}))
+	.pipe(gulp.dest(DEST))
+	.pipe(rename('event-bus-requirejs.min.js'))
 	.pipe(uglify())
-	.pipe(gulp.dest('./out'));
+	.pipe(gulp.dest(DEST));
 });
 
-gulp.task('default', ['standalone:dev', 'standalone:live', 'base:dev', 'base:live']);
+gulp.task('default', ['standalone', 'requirejs']);
