@@ -1,8 +1,8 @@
 {
   "name": "event-bus",
-  "main": "index.js",
-  "version": "1.0.3",
   "main": "out/event-bus-requirejs.min.js",
+  "main-debug": "index.js",
+  "version": "1.0.3",
   "homepage": "https://github.com/InnovaCo/event-bus",
   "authors": [
     "Sergey Chikuyonok <serge.che@gmail.com>"
@@ -27,5 +27,8 @@
       "npm install",
       "./node_modules/.bin/gulp"
     ]
+  },
+  "dependencies": {
+    "postal.js": "~0.10.3"
   }
 }
