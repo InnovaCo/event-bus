@@ -17,10 +17,11 @@ define(function(require, exports, module) {
 				continue;
 			}
 
-			for (var p in src)
+			for (var p in src) {
 				if (src.hasOwnProperty(p)) {
 					obj[p] = src[p];
 				}
+			}
 		}
 
 		return obj;

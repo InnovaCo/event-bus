@@ -20,64 +20,110 @@ describe('request-response events.', function() {
 	};
 
 	beforeEach(function(done) {
-		bus.off('command');
+		bus.off('reject');
+		bus.off('resolve');
 		done();
 	});
 
-	it('Resolve promise using request/on', function(done) {
+	it('using request/on', function(done) {
 
-		bus.on('command', function(arg1) {
-			return 1 + arg1;
-		});
+		bus
+			.on('resolve', function(reply, arg1, arg2) {
+				reply(null, 1 + arg1 + arg2);
+			})
+			.on('reject', function(reply, arg1, arg2) {
+				reply(1 + arg1 + arg2);
+			});
 
-		bus.request('command', 2).then(function(value) {
-			assert.equal(value, 3);
-			done();
+
+		bus.request('resolve', 2, 3).then(function(value) {
+			assert.equal(value, 6);
 		}, function() {
 			done('Promise should be resolved');
 		});
+
+		bus.request('reject', 2, 3).then(function(value) {
+				done('Promise should be rejected');
+			},
+			function() {
+				assert.equal(value, 6);
+			});
+
+		done();
 	});
 
-	it('Reject promise using request/on', function(done) {
-
-		bus.on('command', function(arg) {
-			throw 1 + arg;
-		});
-
-		bus.request('command', 2).then(function() {
-			done('Promise should be rejected');
-		}, function(value) {
-			assert.equal(value, 3);
-			done();
-		});
-	});
-
-	it('Resolve promise using pub/sub', function(done) {
+	it('using request/sub', function(done) {
 
 		bus.subscribe({
-			topic: 'command',
+			topic: 'resolve',
+			callback: function(reply, arg1, arg2) {
+				reply(null, 1 + arg1 + arg2);
+			}
+		});
+
+		bus.subscribe('reject', function(reply, arg1, arg2) {
+			reply(1 + arg1 + arg2);
+		});
+
+
+		bus.request('resolve', 2, 3).then(function(value) {
+			assert.equal(value, 6);
+		}, function() {
+			done('Promise should be resolved');
+		});
+
+		bus.request('reject', 2, 3).then(function(value) {
+				done('Promise should be rejected');
+			},
+			function() {
+				assert.equal(value, 6);
+			});
+
+		done();
+	});
+
+	it(' using pub/sub', function(done) {
+
+		bus.subscribe({
+			topic: 'resolve',
 			callback: function(data, env) {
-				return 1 + data;
+				env.reply(null, 1 + data);
+			}
+		});
+
+		bus.subscribe({
+			topic: 'reject',
+			callback: function(data, env) {
+				env.reply(1 + data);
 			}
 		});
 
 		bus.publish({
-			topic: '/command',
+			topic: '/resolve',
 			data: 2
 		}).then(function(value) {
 			assert.equal(value, 3);
-			done();
 		}, function() {
 			done('Promise should be resolved');
 		});
+
+		bus.publish({
+			topic: '/reject',
+			data: 2
+		}).then(function(value) {
+			done('Promise should be rejected');
+		}, function() {
+			assert.equal(value, 3);
+		});
+
 	});
 
-	it('Reject promise using request/on', function(done) {
-
+	it('Reject promise using /sub', function(done) {
+		done('no actual');
 		bus.subscribe({
 			topic: 'command',
 			callback: function(data, env) {
-				throw 1 + data;
+				env.reply(1 + data);
 			}
 		});
 
@@ -91,37 +137,4 @@ describe('request-response events.', function() {
 			done();
 		});
 	});
-
-	it('Resolve promise using returning promise', function(done) {
-
-		bus.on('command', function(arg1) {
-			promise = bus.configuration.promise.createDeferred();
-			promise[bus.configuration.promise.fulfill](1 + arg1);
-			return bus.configuration.promise.getPromise(promise);
-		});
-
-		bus.request('command', 2).then(function(value) {
-			assert.equal(value, 3);
-			done();
-		}, function() {
-			done('Promise should be resolved');
-		});
-	});
-
-	it('Reject promise using returning promise', function(done) {
-
-		bus.on('command', function(arg1) {
-			promise = bus.configuration.promise.createDeferred();
-			promise[bus.configuration.promise.fail](1 + arg1);
-			return bus.configuration.promise.getPromise(promise);
-		});
-
-		bus.request('command', 2).then(function(value) {
-			done('Promise should be resolved');
-		}, function(value) {
-			assert.equal(value, 3);
-			done();
-		});
-	});
-
 });
