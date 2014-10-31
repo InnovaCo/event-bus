@@ -1,4 +1,8 @@
 var assert = require('assert');
+var mockery = require('mockery');
+mockery.enable();
+mockery.registerMock('jquery', {});
+
 var bus = require('../index');
 var defer = require('q');
 
@@ -15,14 +19,18 @@ describe('request-response events.', function() {
 		fail: "reject",
 	};
 
+	beforeEach(function(done) {
+		bus.off('command');
+		done();
+	});
+
 	it('Resolve promise using request/on', function(done) {
 
 		bus.on('command', function(arg1) {
-			console.log('111111');
 			return 1 + arg1;
 		});
 
-		bus.request('/command', 2).then(function(value) {
+		bus.request('command', 2).then(function(value) {
 			assert.equal(value, 3);
 			done();
 		}, function() {
@@ -32,11 +40,11 @@ describe('request-response events.', function() {
 
 	it('Reject promise using request/on', function(done) {
 
-		bus.on('command', function(args) {
-			throw 1 + args[0];
+		bus.on('command', function(arg) {
+			throw 1 + arg;
 		});
 
-		bus.request('/command', 2).then(function() {
+		bus.request('command', 2).then(function() {
 			done('Promise should be rejected');
 		}, function(value) {
 			assert.equal(value, 3);
@@ -48,8 +56,8 @@ describe('request-response events.', function() {
 
 		bus.subscribe({
 			topic: 'command',
-			callback: function(env) {
-				return 1 + env.data;
+			callback: function(data, env) {
+				return 1 + data;
 			}
 		});
 
@@ -68,12 +76,10 @@ describe('request-response events.', function() {
 
 		bus.subscribe({
 			topic: 'command',
-			callback: function(env) {
-				throw 1 + env.data;
+			callback: function(data, env) {
+				throw 1 + data;
 			}
 		});
-
-		console.log(bus.publish);
 
 		bus.publish({
 			topic: '/command',
@@ -81,7 +87,7 @@ describe('request-response events.', function() {
 		}).then(function() {
 			done('Promise should be rejected');
 		}, function(value) {
-			assert.equal(value, 3);
+			assert.equal(value, 2);
 			done();
 		});
 	});
@@ -90,11 +96,11 @@ describe('request-response events.', function() {
 
 		bus.on('command', function(arg1) {
 			promise = bus.configuration.promise.createDeferred();
-			promise[postal.configuration.promise.fulfill](1 + arg1);
-			return postal.configuration.promise.getPromise(promise);
+			promise[bus.configuration.promise.fulfill](1 + arg1);
+			return bus.configuration.promise.getPromise(promise);
 		});
 
-		bus.request('/command', 2).then(function(value) {
+		bus.request('command', 2).then(function(value) {
 			assert.equal(value, 3);
 			done();
 		}, function() {
@@ -106,15 +112,15 @@ describe('request-response events.', function() {
 
 		bus.on('command', function(arg1) {
 			promise = bus.configuration.promise.createDeferred();
-			promise[postal.configuration.promise.fail](1 + arg1);
-			return postal.configuration.promise.getPromise(promise);
+			promise[bus.configuration.promise.fail](1 + arg1);
+			return bus.configuration.promise.getPromise(promise);
 		});
 
-		bus.request('/command', 2).then(function(value) {
+		bus.request('command', 2).then(function(value) {
+			done('Promise should be resolved');
+		}, function(value) {
 			assert.equal(value, 3);
 			done();
-		}, function() {
-			done('Promise should be resolved');
 		});
 	});
 
