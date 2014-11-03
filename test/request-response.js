@@ -19,10 +19,17 @@ describe('request-response events.', function() {
 		fail: "reject",
 	};
 
-	beforeEach(function(done) {
+	beforeEach(function() {
 		bus.off('reject');
 		bus.off('resolve');
-		done();
+
+		bus.unsubscribeFor({
+			topic: 'reject'
+		});
+
+		bus.unsubscribeFor({
+			topic: 'resolve'
+		})
 	});
 
 	it('using request/on', function(done) {
@@ -35,106 +42,121 @@ describe('request-response events.', function() {
 				reply(1 + arg1 + arg2);
 			});
 
-
-		bus.request('resolve', 2, 3).then(function(value) {
-			assert.equal(value, 6);
-		}, function() {
-			done('Promise should be resolved');
-		});
-
-		bus.request('reject', 2, 3).then(function(value) {
-				done('Promise should be rejected');
+		var resolvePromise = bus.request('resolve', 2, 3).then(function(value) {
+				assert.equal(value, 6);
+				return value;
 			},
 			function() {
-				assert.equal(value, 6);
+				return defer.reject('Promise should be resolved');
 			});
 
-		done();
+		var rejectPromise = bus.request('reject', 2, 3).then(function(value) {
+				return defer.reject('Promise should be rejected');
+			},
+			function(value) {
+				assert.equal(value, 6);
+				return value;
+			});
+
+		defer.all([resolvePromise, rejectPromise]).then(function(val) {
+			done();
+		}, function(reason) {
+			done(reason);
+		});
 	});
 
 	it('using request/sub', function(done) {
 
 		bus.subscribe({
 			topic: 'resolve',
-			callback: function(reply, arg1, arg2) {
-				reply(null, 1 + arg1 + arg2);
-			}
-		});
-
-		bus.subscribe('reject', function(reply, arg1, arg2) {
-			reply(1 + arg1 + arg2);
-		});
-
-
-		bus.request('resolve', 2, 3).then(function(value) {
-			assert.equal(value, 6);
-		}, function() {
-			done('Promise should be resolved');
-		});
-
-		bus.request('reject', 2, 3).then(function(value) {
-				done('Promise should be rejected');
-			},
-			function() {
-				assert.equal(value, 6);
-			});
-
-		done();
-	});
-
-	it(' using pub/sub', function(done) {
-
-		bus.subscribe({
-			topic: 'resolve',
 			callback: function(data, env) {
-				env.reply(null, 1 + data);
+				env.reply.resolve(1 + data.args[0] + data.args[1]);
 			}
 		});
 
 		bus.subscribe({
 			topic: 'reject',
 			callback: function(data, env) {
-				env.reply(1 + data);
+				env.reply(1 + data.args[0] + data.args[1]);
 			}
 		});
 
-		bus.publish({
-			topic: '/resolve',
-			data: 2
-		}).then(function(value) {
-			assert.equal(value, 3);
+		var resolvePromise = bus.request('resolve', 2, 3).then(function(value) {
+			assert.equal(value, 6);
+			return value;
 		}, function() {
-			done('Promise should be resolved');
+			return defer.reject('Promise should be resolved');
 		});
 
-		bus.publish({
-			topic: '/reject',
-			data: 2
+		var rejectPromise = bus.request('reject', 2, 3).then(function(value) {
+			return defer.reject('Promise should be rejected');
+		}, function(value) {
+			assert.equal(value, 6);
+			return value;
+		});
+
+		defer.all([resolvePromise, rejectPromise]).then(function(val) {
+			done();
+		}, function(reason) {
+			done(reason);
+		});
+	});
+
+	it('using pub/sub', function(done) {
+
+		bus.subscribe({
+			topic: 'resolve',
+			callback: function(args, env) {
+				env.reply(null, 1 + args[0] + args[1]);
+			}
+		});
+
+		bus.subscribe({
+			topic: 'reject',
+			callback: function(arg, env) {
+				env.reply(1 + arg);
+			}
+		});
+
+		var resolvePromise = bus.publish({
+			topic: '/resolve',
+			data: [2, 3]
 		}).then(function(value) {
-			done('Promise should be rejected');
+			assert.equal(value, 6);
+			return value;
 		}, function() {
-			assert.equal(value, 3);
+			return defer.reject('Promise should be resolved');
+		});
+
+		var rejectPromise = bus.publish({
+			topic: '/reject',
+			data: 2,
+		}).then(function(value) {
+				return defer.reject('Promise should be rejected');
+			},
+			function(value) {
+				assert.equal(value, 3);
+			});
+
+		defer.all([resolvePromise, rejectPromise]).then(function(val) {
+			done();
+		}, function(reason) {
+			done(reason);
 		});
 
 	});
 
-	it('Reject promise using /sub', function(done) {
-		done('no actual');
-		bus.subscribe({
-			topic: 'command',
-			callback: function(data, env) {
-				env.reply(1 + data);
-			}
-		});
+	it('using trigger/on', function(done) {
 
-		bus.publish({
-			topic: '/command',
-			data: 1
-		}).then(function() {
-			done('Promise should be rejected');
-		}, function(value) {
-			assert.equal(value, 2);
-			done();
-		});
+		bus
+			.on('resolve', function(reply, arg1, arg2) {
+				assert.equal(1 + arg1 + arg2, 6);
+				// reply вызывать нет смысла, т.к 
+				// при вызове через trigger нет ожидающих ответа подписчиков
+				done();
+			});
+
+		bus
+			.trigger('/resolve', 2, 3);
 	});
 });
