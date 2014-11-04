@@ -2,7 +2,8 @@ var gulp = require('gulp'),
 	uglify = require('gulp-uglify'),
 	rjs = require('gulp-requirejs'),
 	rename = require('gulp-rename'),
-	merge = require('merge');
+	merge = require('merge'),
+	jshint = require('gulp-jshint');
 
 var DEST = './out';
 
@@ -13,7 +14,7 @@ var buildOptions = {
 		'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
 		'postal': './node_modules/postal/lib/postal',
 		'lodash': './node_modules/postal/node_modules/lodash/lodash',
-		'q': './node_modules/q/q.js',
+		'q': './node_modules/q/q',
 	},
 	include: ['index'],
 	almond: true,
@@ -61,4 +62,10 @@ gulp.task('requirejs', function() {
 		.pipe(gulp.dest(DEST));
 });
 
-gulp.task('default', ['standalone', 'requirejs']);
+gulp.task('lint', function(argument) {
+	return gulp.src('./lib/*.js')
+		.pipe(jshint())
+		.pipe(jshint.reporter('default'))
+});
+
+gulp.task('default', ['lint', 'standalone', 'requirejs']);
