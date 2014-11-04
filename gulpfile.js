@@ -13,7 +13,7 @@ var buildOptions = {
 		'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
 		'postal': './node_modules/postal/lib/postal',
 		'lodash': './node_modules/postal/node_modules/lodash/lodash',
-		'jquery': './node_modules/jquery/dist/jquery.min.js',
+		'q': './node_modules/q/q.js',
 	},
 	include: ['index'],
 	almond: true,
@@ -47,8 +47,7 @@ gulp.task('standalone', function() {
 gulp.task('requirejs', function() {
 	return rjs(merge.recursive(true, buildOptions, {
 			paths: {
-				'lodash': 'empty:',
-				'jquery': 'empty:',
+				'lodash': 'empty:'
 			},
 			wrap: {
 				startFile: './wrappers/requirejs/start.frag',

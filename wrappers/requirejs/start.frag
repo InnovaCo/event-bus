@@ -1,1 +1,1 @@
-define(['packages/lodash', 'jquery'], function(_, $) {
+define(['packages/lodash'], function(_) {

@@ -8,17 +8,6 @@ var defer = require('q');
 
 describe('request-response events.', function() {
 
-	bus.configuration.promise = {
-		createDeferred: function() {
-			return defer.defer();
-		},
-		getPromise: function(promise) {
-			return promise.promise;
-		},
-		fulfill: "resolve",
-		fail: "reject",
-	};
-
 	beforeEach(function() {
 		bus.off('reject');
 		bus.off('resolve');
