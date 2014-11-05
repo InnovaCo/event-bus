@@ -91,14 +91,14 @@ describe('request-response events.', function() {
 		bus.subscribe({
 			topic: 'resolve',
 			callback: function(data, env) {
-				env.reply.resolve(1 + data.args[0] + data.args[1]);
+				env.reply.resolve(1 + data.__args[0] + data.__args[1]);
 			}
 		});
 
 		bus.subscribe({
 			topic: 'reject',
 			callback: function(data, env) {
-				env.reply(1 + data.args[0] + data.args[1]);
+				env.reply(1 + data.__args[0] + data.__args[1]);
 			}
 		});
 

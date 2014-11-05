@@ -19,8 +19,8 @@
   "author": "Sergey Chikuyonok <sergey.chikuyonok@inn.ru>",
   "license": "MIT",
   "dependencies": {
-    "postal": "^0.10.3",
-    "q": "^1.0.1"
+    "pledges": "^3.0.0",
+    "postal": "^0.10.3"
   },
   "devDependencies": {
     "almond": "~0.2.9",

@@ -14,7 +14,7 @@ var buildOptions = {
 		'conduitjs': './node_modules/postal/node_modules/conduitjs/lib/conduit',
 		'postal': './node_modules/postal/lib/postal',
 		'lodash': './node_modules/postal/node_modules/lodash/lodash',
-		'q': './node_modules/q/q',
+		'pledges': './node_modules/pledges/build/release.min',
 	},
 	include: ['index'],
 	almond: true,
