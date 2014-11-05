@@ -54,6 +54,38 @@ describe('request-response events.', function() {
 		});
 	});
 
+	it('using request/on in channel', function(done) {
+		bus
+			.on('@channel', 'resolve', function(reply, arg1, arg2) {
+				reply(null, 1 + arg1 + arg2);
+			})
+			.on('@channel', 'reject', function(reply, arg1, arg2) {
+				reply(1 + arg1 + arg2);
+			});
+
+		var resolvePromise = bus.request('@channel', 'resolve', 2, 3).then(function(value) {
+				assert.equal(value, 6);
+				return value;
+			},
+			function() {
+				return defer.reject('Promise should be resolved');
+			});
+
+		var rejectPromise = bus.request('@channel', 'reject', 2, 3).then(function(value) {
+				return defer.reject('Promise should be rejected');
+			},
+			function(value) {
+				assert.equal(value, 6);
+				return value;
+			});
+
+		defer.all([resolvePromise, rejectPromise]).then(function(val) {
+			done();
+		}, function(reason) {
+			done(reason);
+		});
+	})
+
 	it('using request/sub', function(done) {
 
 		bus.subscribe({
