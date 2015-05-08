@@ -224,80 +224,107 @@ describe('Backbone facade', function() {
 describe('Backbone compatibility tests', function() {
 	it('on and trigger', function() {
 		var obj = { counter: 0 };
+		var eventEmiter = bus.channel('test1');
 
-		bus.on('event', function() { obj.counter += 1; });
-		bus.trigger('event');
+		eventEmiter.on('event', function() { obj.counter += 1; });
+		eventEmiter.trigger('event');
 		assert.equal(obj.counter, 1, 'counter should be incremented.');
-		bus.trigger('event');
-		bus.trigger('event');
-		bus.trigger('event');
-		bus.trigger('event');
+
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
 		assert.equal(obj.counter, 5, 'counter should be incremented five times.');
 	});
 
 	it('binding and triggering multiple events', function() {
 		var obj = { counter: 0 };
+		var eventEmiter = bus.channel('test2');
 
-		bus.on('a b c', function() { obj.counter += 1; });
+		eventEmiter.on('a b c', function() { obj.counter += 1; });
 
-		bus.trigger('a');
+		eventEmiter.trigger('a');
 		assert.equal(obj.counter, 1);
 
-		bus.trigger('a b');
+		eventEmiter.trigger('a b');
 		assert.equal(obj.counter, 3);
 
-		bus.trigger('c');
+		eventEmiter.trigger('c');
 		assert.equal(obj.counter, 4);
 
-		bus.off('a c');
-		bus.trigger('a b c');
+		eventEmiter.off('a c');
+		eventEmiter.trigger('a b c');
 		assert.equal(obj.counter, 5);
+	});
+
+	it('trigger all for each event', function() {
+		var a, b, obj = { counter: 0 };
+		var eventEmiter = bus.channel('test3');
+
+		eventEmiter.on('all', function(event) {
+			obj.counter++;
+			if (event == 'a') a = true;
+			if (event == 'b') b = true;
+		})
+		.trigger('a b');
+
+		assert.equal(a, true);
+		assert.equal(b, true);
+		assert.equal(obj.counter, 2);
 	});
 
 	it('on, then unbind all functions', function() {
 		var obj = { counter: 0 };
+		var eventEmiter = bus.channel('test4');
 		var callback = function() { obj.counter += 1; };
-		bus.on('event', callback);
-		bus.trigger('event');
-		bus.off('event');
-		bus.trigger('event');
+
+		eventEmiter.on('event', callback);
+		eventEmiter.trigger('event');
+		eventEmiter.off('event');
+		eventEmiter.trigger('event');
 		assert.equal(obj.counter, 1, 'counter should have only been incremented once.');
 	});
 
 	it('bind two callbacks, unbind only one', function() {
 		var obj = { counterA: 0, counterB: 0 };
+		var eventEmiter = bus.channel('test5');
 		var callback = function() { obj.counterA += 1; };
-		bus.on('event', callback);
-		bus.on('event', function() { obj.counterB += 1; });
-		bus.trigger('event');
-		bus.off('event', callback);
-		bus.trigger('event');
+
+		eventEmiter.on('event', callback);
+		eventEmiter.on('event', function() { obj.counterB += 1; });
+		eventEmiter.trigger('event');
+		eventEmiter.off('event', callback);
+		eventEmiter.trigger('event');
 		assert.equal(obj.counterA, 1, 'counterA should have only been incremented once.');
 		assert.equal(obj.counterB, 2, 'counterB should have been incremented twice.');
 	});
 
 	it('unbind a callback in the midst of it firing', function() {
 		var obj = {counter: 0};
+		var eventEmiter = bus.channel('test6');
 		var callback = function() {
 			obj.counter += 1;
-			bus.off('event', callback);
+			eventEmiter.off('event', callback);
 		};
-		bus.on('event', callback);
-		bus.trigger('event');
-		bus.trigger('event');
-		bus.trigger('event');
+
+		eventEmiter.on('event', callback);
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
 		assert.equal(obj.counter, 1, 'the callback should have been unbound.');
 	});
 
 	it('two binds that unbind themeselves', function() {
 		var obj = { counterA: 0, counterB: 0 };
-		var incrA = function(){ obj.counterA += 1; bus.off('event', incrA); };
-		var incrB = function(){ obj.counterB += 1; bus.off('event', incrB); };
-		bus.on('event', incrA);
-		bus.on('event', incrB);
-		bus.trigger('event');
-		bus.trigger('event');
-		bus.trigger('event');
+		var eventEmiter = bus.channel('test7');
+		var incrA = function(){ obj.counterA += 1; eventEmiter.off('event', incrA); };
+		var incrB = function(){ obj.counterB += 1; eventEmiter.off('event', incrB); };
+
+		eventEmiter.on('event', incrA);
+		eventEmiter.on('event', incrB);
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
+		eventEmiter.trigger('event');
 		assert.equal(obj.counterA, 1, 'counterA should have only been incremented once.');
 		assert.equal(obj.counterB, 1, 'counterB should have only been incremented once.');
 	});
@@ -306,34 +333,57 @@ describe('Backbone compatibility tests', function() {
 		var TestClass = function () {
 			return this;
 		};
+		var eventEmiter = bus.channel('test8');
 
 		TestClass.prototype.assertTrue = function() {
 			done();
 		};
 
-		bus.on('event', function () { this.assertTrue(); }, (new TestClass));
-		bus.trigger('event');
-		bus.off('event');
+		eventEmiter.on('event', function () { this.assertTrue(); }, (new TestClass));
+		eventEmiter.trigger('event');
+		eventEmiter.off('event');
+	});
+
+	it('callback list is not altered during trigger', function() {
+		var counter = 0;
+		var eventEmiter = bus.channel('test9');
+		var incr = function(){ counter++; };
+
+		eventEmiter.on('event', function(){ eventEmiter.on('event', incr).on('all', incr); })
+		.trigger('event');
+		assert.equal(counter, 0, 'bind does not alter callback list');
+
+		eventEmiter.off()
+		.on('event', function(){ eventEmiter.off('event', incr).off('all', incr); })
+		.on('event', incr)
+		.on('all', incr)
+		.trigger('event');
+
+		assert.equal(counter, 2, 'unbind does not alter callback list');
 	});
 
 	it('remove all events for a specific context', function() {
 		var obj = { counterA: 0, counterB: 0 };
-		bus.on('x y', function() { obj.counterA += 1; });
-		bus.on('x y', function() { obj.counterB += 1; }, obj);
-		bus.off(null, null, obj);
-		bus.trigger('x y');
+		var eventEmiter = bus.channel('test10');
+
+		eventEmiter.on('x y', function() { obj.counterA += 1; });
+		eventEmiter.on('x y', function() { obj.counterB += 1; }, obj);
+		eventEmiter.off(null, null, obj);
+		eventEmiter.trigger('x y');
 		assert.equal(obj.counterA, 2, 'counterA should have been incremented twice.');
 		assert.equal(obj.counterB, 0, 'the callback should have been unbound.');
 	});
 
 	it('remove all events for a specific callback', function() {
 		var obj = { counterA: 0, counterB: 0 };
+		var eventEmiter = bus.channel('test11');
 		var success = function() { obj.counterA += 1; };
 		var fail = function() { obj.counterB += 1; };
-		bus.on('x y', success);
-		bus.on('x y', fail);
-		bus.off(null, fail);
-		bus.trigger('x y');
+
+		eventEmiter.on('x y', success);
+		eventEmiter.on('x y', fail);
+		eventEmiter.off(null, fail);
+		eventEmiter.trigger('x y');
 		assert.equal(obj.counterA, 2, 'counterA should have been incremented twice.');
 		assert.equal(obj.counterB, 0, 'the callback should have been unbound.');
 	});
