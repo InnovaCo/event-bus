@@ -2,7 +2,7 @@
   "name": "event-bus",
   "main": "out/event-bus-requirejs.min.js",
   "main-debug": "index.js",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "homepage": "https://github.com/InnovaCo/event-bus",
   "authors": [
     "Sergey Chikuyonok <serge.che@gmail.com>"
